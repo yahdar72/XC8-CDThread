@@ -85,7 +85,6 @@ void cdtimer_GetTicks()
     if (Tim4idx>7)
         Tim4idx=0;
 #endif
-
 }
 
 
@@ -106,6 +105,8 @@ void cdtimer_INIT()
     //#use timer(timer=4,tick=1000us,bits=32,NOISR)
     SFR_TMR246_t tmr;
 
+/*      FOLLOWING CODE IS FOR CCS AND MUST BE RECODED FOR XC8 
+
     disable_interrupts(INT_TIMER4);    //no interrupt, only polling
 
     SFR_PR4 = 0xFF;     //reset timer after 256 clock (clock is output of prescaler)
@@ -115,6 +116,7 @@ void cdtimer_INIT()
     Absolute_timer=0;
     SFR_TMR4=0;
     SFR_T4CON = tmr.u8;  //setup and start timer 4
+*/
 }
 
 
