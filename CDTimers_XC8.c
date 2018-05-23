@@ -21,11 +21,14 @@
 #include "CDThread.h"
 
 
-
+/*      FOLLOWING CODE IS FOR CCS AND MUST BE RECODED FOR XC8 
 ************************************ONLY FOR CCS*******************************************************************
 #byte SFR_TMR4=0x415
 #byte SFR_PR4=0x416
 #byte SFR_T4CON=0x417
+*/
+
+
 
 //enable this define if you want that will be stored 8 time-stamp in cdtimer_GetTicks
 //#define _CDTIMERS_DEBUG_
