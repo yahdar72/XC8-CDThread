@@ -29,7 +29,7 @@ typedef struct cdevent_t_tag{
    sint_t Enabled;   //!< indicates if true that the event is usable (if false and active=true however the isActive function return false) 
    sint_t Active;      //!< indicates if the event is happened, this flag must be resetted (=false) by the event consumer/manager
    sint_t Id;         //!< optional, indicates a number that identify the event of the same type (used in events array)
-   void* ptrParam;   //!< optiona, is a pointer to static memory that point to a primitive data or struct (user data) that must be used to pass a parameter to event consumer/manager
+   void* ptrParam;   //!< optional, is a pointer to static memory that point to a primitive data or struct (user data) that must be used to pass a parameter to event consumer/manager
 }cdevent_t;
 
 

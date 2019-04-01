@@ -8,7 +8,7 @@
 //// Author: Dario Cortese                                              ////
 //// Client: Mariano Cerbone (only for Project Mangoose)                ////
 //// Created on 10/08/2012                                              ////
-//// Modify on 12/05/2018 to be adapted at XC8 compiler                 ////
+//// Modify on 03/07/2018 to be adapted at XC8 compiler                 ////
 //// File: cdThread.c                                                   ////
 //// Description:                                                       ////
 //// THIS FILE HAVE ALL IMPLEMENTATION OF FUNCTION USED FOR CDTHREAD    ////
@@ -164,7 +164,10 @@ sint_t cdthread_Engine(void){
          //call the callback function
          exitState = thptr->LastExitState;
          exitState = (*ptrFunc)( isFirstTime, cdthid, exitState);
-         thptr->isTheFirstTime = FALSE;   //after now sign this thread as "not the first time" that is called
+         //reset isTheFirstTime flag only if before to call function was true, otherwise
+         // avoid to change it. This check allow to change isTheFirstTime inside the called function
+         if(isFirstTime)
+            thptr->isTheFirstTime = FALSE;   //after now sign this thread as "not the first time" that is called
          //store actual exitcode for this thread
          thptr->LastExitState = exitState;
          LASTCALLEDTHREADIDBYENGINE = cdthid;   //advise external code which is the last called thread by engine
@@ -419,7 +422,8 @@ int cdthread_new(cdThreadID_t* pThId, cdtreadFunctionType ptrFunction){
    thptr->isTheFirstTime = TRUE;
    thptr->MessagesCounter=0;
    thptr->FirstMsgID = CDMESSAGEID_ERROR;
-   thptr->LastMsgID = CDMESSAGEID_ERROR;      
+   thptr->LastMsgID = CDMESSAGEID_ERROR;
+   *pThId = LocID;
    return TRUE;
 } 
 
@@ -769,7 +773,55 @@ int cdthread_isThrereMessages(cdThreadID_t pThId){
 
 
 
-/*! \fn cdMessageID_t cdthread_getMessage(cdThreadID_t pThId)
+///*! \fn cdMessageID_t cdthread_getMessage(cdThreadID_t pThId)
+//   \author Dario Cortese
+//   \date 09-08-2012 updated 2015-11-04
+//   \brief return the first message (id) on msg queue of indicated thread, and sign it as readed; if there isn't or an error occours then return CDMESSAGEID_ERROR
+//   \param pThId is cdthread (id) to check
+//   \return the cdmessageid of available message, otherwise return CDMESSAGEID_ERROR if there isn't messages or an error accurred
+//   \note this function doesn't remove message from queue, and so if you doesn't remove it by cdthread_removeMessage(thid), next time reread this message
+//   \version 1.00
+//*/
+//cdMessageID_t cdthread_getMessage(cdThreadID_t pThId){
+//   cdThreadID_t realidx;
+//   cdMessageID_t msgid;
+//   //convert pThId in real index for cdthreadsSystemArray
+//   realidx = cdthread_getArrayIdxFromID(pThId);
+//   //if an error happened then return false
+//   if( realidx<0 ) return CDMESSAGEID_ERROR; 
+//   if( cdthreadsSystemArray[(unsigned)realidx].MessagesCounter> 0){
+//      msgid = cdthreadsSystemArray[(unsigned)realidx].FirstMsgID;
+//      //sign indicated message as readed, but doesnt remove it from queue
+//      cdmessage_sigMsgAsReaded( msgid);
+//      return msgid;
+//   }
+//   return CDMESSAGEID_ERROR;
+//} 
+//
+//
+///*! \fn int cdthread_removeMessage(cdThreadID_t pThId)
+//   \author Dario Cortese
+//   \date 09-08-2012 updated 2015-11-04
+//   \brief remove first message from thread msg queue and return true if action has success, otherwise return false
+//   \param pThId is cdthread (id) to check
+//   \return true if remove msg from thread queue or false if an error happen
+//   \version 1.00
+//*/
+//int cdthread_removeMessage(cdThreadID_t pThId){
+//   cdThreadID_t realidx;
+//   cdMessageID_t msgid;
+//   //convert pThId in real index for cdthreadsSystemArray
+//   realidx = cdthread_getArrayIdxFromID(pThId);
+//   //if an error happened then return false
+//   if( realidx<0 ) return FALSE; 
+//   if( cdthreadsSystemArray[(unsigned)realidx].MessagesCounter> 0){
+//      msgid = cdthreadsSystemArray[(unsigned)realidx].FirstMsgID;
+//      return cdmessage_deleteMsg( msgid );
+//   }
+//   return CDMESSAGEID_ERROR;
+//} 
+
+/*! \fn cdmessageData_t cdthread_getMessage(cdThreadID_t pThId)
    \author Dario Cortese
    \date 09-08-2012 updated 2015-11-04
    \brief return the first message (id) on msg queue of indicated thread, and sign it as readed; if there isn't or an error occours then return CDMESSAGEID_ERROR
@@ -778,43 +830,51 @@ int cdthread_isThrereMessages(cdThreadID_t pThId){
    \note this function doesn't remove message from queue, and so if you doesn't remove it by cdthread_removeMessage(thid), next time reread this message
    \version 1.00
 */
-cdMessageID_t cdthread_getMessage(cdThreadID_t pThId){
+cdmessageData_t cdthread_getMessage(cdThreadID_t pThId){
+   cdmessageData_t msgD; 
+   cdMessageID_t idx;
    cdThreadID_t realidx;
-   cdMessageID_t msgid;
-   //convert pThId in real index for cdthreadsSystemArray
-   realidx = cdthread_getArrayIdxFromID(pThId);
-   //if an error happened then return false
-   if( realidx<0 ) return CDMESSAGEID_ERROR; 
-   if( cdthreadsSystemArray[(unsigned)realidx].MessagesCounter> 0){
-      msgid = cdthreadsSystemArray[(unsigned)realidx].FirstMsgID;
-      //sign indicated message as readed, but doesnt remove it from queue
-      cdmessage_sigMsgAsReaded( msgid);
-      return msgid;
-   }
-   return CDMESSAGEID_ERROR;
-} 
-
-
-/*! \fn int cdthread_removeMessage(cdThreadID_t pThId)
-   \author Dario Cortese
-   \date 09-08-2012 updated 2015-11-04
-   \brief remove first message from thread msg queue and return true if action has success, otherwise return false
-   \param pThId is cdthread (id) to check
-   \return true if remove msg from thread queue or false if an error happen
-   \version 1.00
-*/
-int cdthread_removeMessage(cdThreadID_t pThId){
-   cdThreadID_t realidx;
-   cdMessageID_t msgid;
-   //convert pThId in real index for cdthreadsSystemArray
-   realidx = cdthread_getArrayIdxFromID(pThId);
-   //if an error happened then return false
-   if( realidx<0 ) return FALSE; 
-   if( cdthreadsSystemArray[(unsigned)realidx].MessagesCounter> 0){
-      msgid = cdthreadsSystemArray[(unsigned)realidx].FirstMsgID;
-      return cdmessage_deleteMsg( msgid );
-   }
-   return CDMESSAGEID_ERROR;
+   cdmessageStruct* MsgPtr;
+   cdThreadStruct_t* ThPtr;
+           
+   msgD.actMsg = CDMESSAGEID_ERROR;
+   msgD.msgData = 0;
+   msgD.msgInfo = 0;
+   msgD.msgSender = CDTHREADID_ERROR;
+   
+    //convert pThId in real index for cdthreadsSystemArray
+    realidx = cdthread_getArrayIdxFromID(pThId);
+    //if an error happened then return false
+    if( realidx<0 ) return msgD; //exit for error
+    ThPtr = &cdthreadsSystemArray[(unsigned)realidx];
+    if( ThPtr->MessagesCounter > 0){
+        msgD.actMsg = ThPtr->FirstMsgID;
+        //sign indicated message as readed, but doesnt remove it from queue
+        //cdmessage_sigMsgAsReaded( msgid);
+        idx = cdmessage_getArrayIdxFromID(msgD.actMsg);
+        if(idx >= 0){
+            MsgPtr =  &cdmessagesSystemArray[(unsigned)idx];
+            //useless: MsgPtr->State = CDMESSAGESTATE_READED;
+            msgD.msgData = MsgPtr->Data;
+            msgD.msgInfo = MsgPtr->Info;
+            msgD.msgSender = MsgPtr->cdthSenderID;
+           
+            //now delete the message
+            MsgPtr->State = CDMESSAGESTATE_DELETED;
+            if(ThPtr->MessagesCounter <= 1){
+                ThPtr->FirstMsgID = CDMESSAGEID_ERROR;
+                ThPtr->LastMsgID = CDMESSAGEID_ERROR;
+                ThPtr->MessagesCounter = 0;    
+            }else{ //if(ThPtr->MessagesCounter == 1)
+               //as is if(ThPtr->MessagesCounter > 1)
+               ThPtr->FirstMsgID = MsgPtr->NextMsgID; 
+               ThPtr->MessagesCounter--;
+            }
+        }else{ //if(idx >= 0)
+            msgD.actMsg = CDMESSAGEID_ERROR;
+        }
+    } //end if( cdthreadsSystemArray[(unsigned)realidx].MessagesCounter> 0)
+    return msgD;
 } 
 
 

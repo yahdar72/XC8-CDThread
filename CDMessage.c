@@ -45,7 +45,7 @@ void cdmessage_initAll(void){
    for(idx=0; idx < CDTHREAD_MAX_NUM_MESSAGES; idx++){
       cdmessagesSystemArray[(unsigned)idx].cdthID=CDTHREADID_ERROR;      //free/available position, so not associated
       cdmessagesSystemArray[(unsigned)idx].State=CDMESSAGESTATE_DELETED;//free/available position
-      //cdmessagesSystemArray[(unsigned)idx].ptrData = CDMESSAGEDATA_NODATA;   //no data associated
+      //cdmessagesSystemArray[(unsigned)idx].ptrData = CDMESSAGEDATA_NODATAPTR;   //no data associated
       cdmessagesSystemArray[(unsigned)idx].Data = 0;   //no data available
       cdmessagesSystemArray[(unsigned)idx].Info = 0;   //default value
       cdmessagesSystemArray[(unsigned)idx].NextMsgID = CDMESSAGEID_ERROR;   //no next message   
@@ -194,7 +194,7 @@ cdMessageID_t cdmessage_new(cdThreadID_t pThreadIDdest, cdMsgInfo_t pInfoVal, cd
    \date 13-11-2015
    \brief creates new message with a pointer to data, and adds it to message queue of indicated thread
     As the same function of cdmessage_new(..) but convert (casting) ptrData memory pointer in a cdMsgData_t type and store it as a simple data.
-   \n If no data and thread to add at this message please use cdmessage_new( pThreadID , pInfoVal, 0 , CDMESSAGEDATA_NODATA, CDTHREADID_NOTHREAD )
+   \n If no data and thread to add at this message please use cdmessage_new( pThreadID , pInfoVal, 0 , CDMESSAGEDATA_NODATAPTR, CDTHREADID_NOTHREAD )
    \param pThreadIDdest is the thread where message will be asent (added to msg thread queue)
    \param pInfoVal is an integer that inform receiver what is the message (is a number and values must be user defined)
    \param ptrData is the pointer to the data
@@ -391,7 +391,7 @@ cdMsgData_t cdmessage_getData( cdMessageID_t pMsgId ){
 void* cdmessage_getDataPointer( cdMessageID_t pMsgId ){
    cdMessageID_t idx;
    idx = cdmessage_getArrayIdxFromID(pMsgId);
-   if(idx < 0) return CDMESSAGEDATA_NODATA;   //indicate an error
+   if(idx < 0) return CDMESSAGEDATA_NODATAPTR;   //indicate an error
    return (void *)cdmessagesSystemArray[(unsigned)idx].Data;
  
 }
